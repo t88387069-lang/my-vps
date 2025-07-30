@@ -1,4 +1,4 @@
-name: VPS with Cloudflare Tunnel
+name: Test VPS with Cloudflare
 
 on:
   workflow_dispatch:
@@ -8,34 +8,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: نصب و پیکربندی SSH
+      - name: نصب و راه‌اندازی SSH
         run: |
           sudo apt update
-          sudo apt install -y openssh-server pwgen
-          PASS=$(pwgen 12 1)
-          echo "root:$PASS" | sudo chpasswd
+          sudo apt install -y openssh-server
+          echo 'root:pass1234' | sudo chpasswd
           sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
           sudo systemctl restart ssh
-          echo "$PASS" > password.txt
+          sudo systemctl enable ssh
 
       - name: نصب cloudflared
         run: |
           wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
           sudo dpkg -i cloudflared-linux-amd64.deb
 
-      - name: اجرای تونل
+      - name: اجرای تونل با Cloudflare
         run: |
-          cloudflared tunnel --url ssh://localhost:22 --no-autoupdate > cf.log 2>&1 &
+          cloudflared tunnel --url ssh://localhost:22 --no-autoupdate > tunnel.log 2>&1 &
           sleep 10
-          cat cf.log | grep -o 'https://.*trycloudflare.com' > tunnel_url.txt
+          cat tunnel.log | grep -o 'https://.*trycloudflare.com' > tunnel.txt || echo "URL not found" > tunnel.txt
+          echo "username: root" >> tunnel.txt
+          echo "password: pass1234" >> tunnel.txt
+          cat tunnel.txt
 
-      - name: ذخیره اطلاعات دسترسی
+      - name: نگه داشتن Runner زنده
         run: |
-          echo "username: root" >> tunnel_url.txt
-          echo "password: $(cat password.txt)" >> tunnel_url.txt
-
-      - name: آپلود اطلاعات به عنوان artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ssh-info
-          path: tunnel_url.txt
+          echo "Runner is now alive for 3 hours"
+          sleep 10800
