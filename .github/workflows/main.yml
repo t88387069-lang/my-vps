@@ -9,13 +9,14 @@ jobs:
     steps:
       - name: Install and run SSH server
         run: |
-          sudo apt update
-          sudo apt install -y openssh-server
-          sudo systemctl start ssh
-          sudo systemctl enable ssh
-          echo 'root:pass1234' | sudo chpasswd
-          sudo sed -i 's/^#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-          sudo systemctl restart ssh
-          ip addr show
-          echo "SSH server started. Username: root, Password: pass1234"
-          sleep 10800  # نگه داشتن 3 ساعت
+          - name: Install and run SSH server
+            run: |
+              sudo apt update
+              sudo apt install -y openssh-server openssh-client
+              echo 'root:pass1234' | sudo chpasswd
+              sudo sed -i 's/^#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+              sudo systemctl restart ssh
+              ssh -o StrictHostKeyChecking=no -R 2222:localhost:22 serveo.net &
+              echo "Tunnel created to serveo.net on port 2222"
+              sleep 10800
+
