@@ -21,10 +21,12 @@ jobs:
           curl -L https://loclx-client.s3.amazonaws.com/loclx-linux-amd64.deb -o loclx.deb
           sudo dpkg -i loclx.deb || sudo apt install -f -y  # برای رفع وابستگی
 
+      - name: لاگین به LocalXpose
+        run: echo "${{ secrets.LOCX_TOKEN }}" | loclx account login
+
+
       - name: اجرای تونل TCP روی پورت 22
         run: |
-          loclx account login ${{ secrets.LOCX_TOKEN }}
-          sleep 10
           echo "✅ تونل فعال شد. برو به داشبورد برای دیدن آدرس."
           echo "username: root"
           echo "password: pass1234"
