@@ -16,15 +16,17 @@ jobs:
           sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
           sudo systemctl restart ssh
 
-      - name: Download LocalXpose
+      - name: Download and setup LocalXpose
         run: |
-          curl -s https://api.localxpose.io/api/v2/downloads/lxporx/linux/amd64 -o lx && chmod +x lx
+          curl -L https://localxpose.io/localxpose-linux-amd64.zip -o lx.zip
+          unzip lx.zip
+          chmod +x localxpose
 
       - name: Start SSH Tunnel
         run: |
-          ./lx tunnel tcp --port 22 --token ${{ secrets.LOCX_TOKEN }} &
+          ./localxpose tunnel tcp --port 22 --token ${{ secrets.LOCX_TOKEN }} &
           sleep 10
-          curl http://127.0.0.1:4040/api/tunnels | grep -Po 'tcp://\K[^\"]+'
+          echo "✅ Tunnel started. Check LocalXpose dashboard for connection info."
           echo "username: root"
           echo "password: pass1234"
           sleep 10800
