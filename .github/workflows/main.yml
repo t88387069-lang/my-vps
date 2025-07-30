@@ -1,0 +1,21 @@
+name: VPS HackBox
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install and run SSH server
+        run: |
+          sudo apt update
+          sudo apt install -y openssh-server
+          sudo systemctl start ssh
+          sudo systemctl enable ssh
+          echo 'root:pass1234' | sudo chpasswd
+          sudo sed -i 's/^#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+          sudo systemctl restart ssh
+          ip addr show
+          echo "SSH server started. Username: root, Password: pass1234"
+          sleep 10800  # نگه داشتن 3 ساعت
