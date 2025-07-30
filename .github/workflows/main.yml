@@ -1,4 +1,4 @@
-name: VPS with LocalXpose SSH
+name: VPS with Cloudflare Tunnel
 
 on:
   workflow_dispatch:
@@ -11,23 +11,31 @@ jobs:
       - name: نصب و پیکربندی SSH
         run: |
           sudo apt update
-          sudo apt install -y openssh-server curl
-          echo 'root:pass1234' | sudo chpasswd
+          sudo apt install -y openssh-server pwgen
+          PASS=$(pwgen 12 1)
+          echo "root:$PASS" | sudo chpasswd
           sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
           sudo systemctl restart ssh
+          echo "$PASS" > password.txt
 
-      - name: دانلود و نصب LocalXpose
+      - name: نصب cloudflared
         run: |
-          curl -L https://loclx-client.s3.amazonaws.com/loclx-linux-amd64.deb -o loclx.deb
-          sudo dpkg -i loclx.deb || sudo apt install -f -y  # برای رفع وابستگی
+          wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared-linux-amd64.deb
 
-      - name: لاگین به LocalXpose
-        run: echo "${{ secrets.LOCX_TOKEN }}" | loclx account login
-
-
-      - name: اجرای تونل TCP روی پورت 22
+      - name: اجرای تونل
         run: |
-          echo "✅ تونل فعال شد. برو به داشبورد برای دیدن آدرس."
-          echo "username: root"
-          echo "password: pass1234"
-          sleep 10800
+          cloudflared tunnel --url ssh://localhost:22 --no-autoupdate > cf.log 2>&1 &
+          sleep 10
+          cat cf.log | grep -o 'https://.*trycloudflare.com' > tunnel_url.txt
+
+      - name: ذخیره اطلاعات دسترسی
+        run: |
+          echo "username: root" >> tunnel_url.txt
+          echo "password: $(cat password.txt)" >> tunnel_url.txt
+
+      - name: آپلود اطلاعات به عنوان artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssh-info
+          path: tunnel_url.txt
