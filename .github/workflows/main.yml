@@ -24,7 +24,6 @@ jobs:
       - name: اجرای تونل TCP روی پورت 22
         run: |
           ./loclx account login ${{ secrets.LOCX_TOKEN }}
-          loclx tunnel tcp --port 22 &
           sleep 10
           echo "✅ تونل فعال شد. برو به داشبورد برای دیدن آدرس."
           echo "username: root"
