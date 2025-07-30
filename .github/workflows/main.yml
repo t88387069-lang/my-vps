@@ -1,4 +1,4 @@
-name: Free VPS with LocalXpose SSH
+name: VPS with LocalXpose SSH (snap)
 
 on:
   workflow_dispatch:
@@ -8,25 +8,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install and Configure SSH
+      - name: Install OpenSSH Server
         run: |
           sudo apt update
-          sudo apt install -y openssh-server curl unzip
+          sudo apt install -y openssh-server
           echo 'root:pass1234' | sudo chpasswd
           sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
           sudo systemctl restart ssh
 
-      - name: Download and setup LocalXpose
+      - name: Install LocalXpose via snap
         run: |
-          curl -L https://localxpose.io/localxpose-linux-amd64.zip -o lx.zip
-          unzip lx.zip
-          chmod +x localxpose
+          sudo snap install localxpose
 
-      - name: Start SSH Tunnel
+      - name: Authenticate and start SSH Tunnel
         run: |
-          ./localxpose tunnel tcp --port 22 --token ${{ secrets.LOCX_TOKEN }} &
+          localxpose account login --token ${{ secrets.LOCX_TOKEN }}
+          localxpose tunnel tcp --port 22 --to localhost:22 &
           sleep 10
-          echo "✅ Tunnel started. Check LocalXpose dashboard for connection info."
+          echo "✅ Tunnel started. View address in your LocalXpose dashboard under TCP tunnels."
           echo "username: root"
           echo "password: pass1234"
           sleep 10800
