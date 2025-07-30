@@ -1,14 +1,14 @@
-name: Test VPS with Cloudflare
+name: VPS over Cloudflare Tunnel
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  tunnel:
     runs-on: ubuntu-latest
 
     steps:
-      - name: نصب و راه‌اندازی SSH
+      - name: نصب SSH و فعال‌سازی
         run: |
           sudo apt update
           sudo apt install -y openssh-server
@@ -19,19 +19,15 @@ jobs:
 
       - name: نصب cloudflared
         run: |
-          wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
           sudo dpkg -i cloudflared-linux-amd64.deb
 
-      - name: اجرای تونل با Cloudflare
+      - name: اجرای تونل
         run: |
-          cloudflared tunnel --url ssh://localhost:22 --no-autoupdate > tunnel.log 2>&1 &
+          nohup cloudflared tunnel --url ssh://localhost:22 --no-autoupdate > tunnel.log 2>&1 &
           sleep 10
-          cat tunnel.log | grep -o 'https://.*trycloudflare.com' > tunnel.txt || echo "URL not found" > tunnel.txt
-          echo "username: root" >> tunnel.txt
-          echo "password: pass1234" >> tunnel.txt
-          cat tunnel.txt
-
-      - name: نگه داشتن Runner زنده
-        run: |
-          echo "Runner is now alive for 3 hours"
+          cat tunnel.log | grep -o 'https://.*trycloudflare.com' || echo "⚠️ تونل ساخته نشد"
+          echo "username: root"
+          echo "password: pass1234"
+          echo "⏳ اتصال باز می‌ماند تا 3 ساعت..."
           sleep 10800
