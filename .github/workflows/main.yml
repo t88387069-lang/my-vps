@@ -1,4 +1,4 @@
-name: VPS with LocalXpose SSH (snap)
+name: VPS with LocalXpose SSH
 
 on:
   workflow_dispatch:
@@ -8,24 +8,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install OpenSSH Server
+      - name: نصب و پیکربندی SSH
         run: |
           sudo apt update
-          sudo apt install -y openssh-server
+          sudo apt install -y openssh-server curl
           echo 'root:pass1234' | sudo chpasswd
           sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
           sudo systemctl restart ssh
 
-      - name: Install LocalXpose via snap
+      - name: دانلود و نصب LocalXpose
         run: |
-          sudo snap install localxpose
+          curl -L https://loclx-client.s3.amazonaws.com/loclx-linux-amd64.deb -o loclx.deb
+          sudo dpkg -i loclx.deb || sudo apt install -f -y  # برای رفع وابستگی
 
-      - name: Authenticate and start SSH Tunnel
+      - name: اجرای تونل TCP روی پورت 22
         run: |
-          localxpose account login --token ${{ secrets.LOCX_TOKEN }}
-          localxpose tunnel tcp --port 22 --to localhost:22 &
+          loclx auth login --token ${{ secrets.LOCX_TOKEN }}
+          loclx tunnel tcp --port 22 &
           sleep 10
-          echo "✅ Tunnel started. View address in your LocalXpose dashboard under TCP tunnels."
+          echo "✅ تونل فعال شد. برو به داشبورد برای دیدن آدرس."
           echo "username: root"
           echo "password: pass1234"
           sleep 10800
