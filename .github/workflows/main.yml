@@ -1,22 +1,29 @@
-name: VPS HackBox
+# نام این اکشن (فقط برای نمایش در GitHub)
+name: Start Free VPS with SSH Tunnel
 
+# بگیم چه زمانی اجرا بشه
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # یعنی دستی اجرا میشه
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install and run SSH server
-        run: |
-          - name: Install and run SSH server
-            run: |
-              sudo apt update
-              sudo apt install -y openssh-server openssh-client
-              echo 'root:pass1234' | sudo chpasswd
-              sudo sed -i 's/^#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-              sudo systemctl restart ssh
-              ssh -o StrictHostKeyChecking=no -R 2222:localhost:22 serveo.net &
-              echo "Tunnel created to serveo.net on port 2222"
-              sleep 10800
+    runs-on: ubuntu-latest  # سیستم عاملی که GitHub اجرا میکنه
 
+    steps:  # مراحل (هر مرحله یک کاره)
+      - name: Update and Install SSH Server
+        run: |
+          sudo apt update
+          sudo apt install -y openssh-server
+
+      - name: Configure SSH Server
+        run: |
+          echo 'root:pass1234' | sudo chpasswd
+          sudo sed -i 's/^#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+          sudo systemctl restart ssh
+
+      - name: Create SSH Tunnel with Serveo
+        run: |
+          ssh -o StrictHostKeyChecking=no -R 2222:localhost:22 serveo.net &
+          echo "Tunnel established. You can now SSH into this VPS using:"
+          echo "ssh -p 2222 root@serveo.net"
+          sleep 10800  # نگه داشتن سرور تا ۳ ساعت
