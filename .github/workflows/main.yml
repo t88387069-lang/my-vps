@@ -1,29 +1,33 @@
-# نام این اکشن (فقط برای نمایش در GitHub)
-name: Start Free VPS with SSH Tunnel
+name: Free VPS with SSH (ngrok)
 
-# بگیم چه زمانی اجرا بشه
 on:
-  workflow_dispatch:  # یعنی دستی اجرا میشه
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # سیستم عاملی که GitHub اجرا میکنه
+    runs-on: ubuntu-latest
 
-    steps:  # مراحل (هر مرحله یک کاره)
-      - name: Update and Install SSH Server
+    steps:
+      - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y openssh-server
-
-      - name: Configure SSH Server
-        run: |
-          echo 'root:pass1234' | sudo chpasswd
-          sudo sed -i 's/^#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+          sudo apt install -y openssh-server curl unzip
+          echo "root:pass1234" | sudo chpasswd
+          sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
           sudo systemctl restart ssh
 
-      - name: Create SSH Tunnel with Serveo
+      - name: Setup ngrok
         run: |
-          ssh -o StrictHostKeyChecking=no -R 2222:localhost:22 serveo.net &
-          echo "Tunnel established. You can now SSH into this VPS using:"
-          echo "ssh -p 2222 root@serveo.net"
-          sleep 10800  # نگه داشتن سرور تا ۳ ساعت
+          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
+          sudo apt update && sudo apt install ngrok -y
+          ngrok config add-authtoken ${{ secrets.NGROK_TOKEN }}
+          ngrok tcp 22 &
+
+      - name: Show tunnel info
+        run: |
+          sleep 10
+          curl -s http://127.0.0.1:4040/api/tunnels | grep -Po 'tcp://\K[^\"]+'
+          echo "username: root"
+          echo "password: pass1234"
+          sleep 10800
