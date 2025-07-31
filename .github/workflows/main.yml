@@ -1,33 +1,16 @@
-name: VPS over Cloudflare Tunnel
+name: SSH via Cloudflare Tunnel
 
 on:
   workflow_dispatch:
 
 jobs:
-  tunnel:
+  connect:
     runs-on: ubuntu-latest
-
     steps:
-      - name: نصب SSH و فعال‌سازی
-        run: |
-          sudo apt update
-          sudo apt install -y openssh-server
-          echo 'root:pass1234' | sudo chpasswd
-          sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-          sudo systemctl restart ssh
-          sudo systemctl enable ssh
+      - uses: actions/checkout@v2
 
-      - name: نصب cloudflared
-        run: |
-          wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-          sudo dpkg -i cloudflared-linux-amd64.deb
+      - name: Expose SSH via Cloudflare
+        uses: valeriangalliat/action-sshd-cloudflared@v4
 
-      - name: اجرای تونل
-        run: |
-          nohup cloudflared tunnel --url ssh://localhost:22 --no-autoupdate > tunnel.log 2>&1 &
-          sleep 10
-          cat tunnel.log | grep -o 'https://.*trycloudflare.com' || echo "⚠️ تونل ساخته نشد"
-          echo "username: root"
-          echo "password: pass1234"
-          echo "⏳ اتصال باز می‌ماند تا 3 ساعت..."
-          sleep 10800
+      - name: خروجی دستور SSH
+        run: echo "Use the ssh command printed above to connect."
