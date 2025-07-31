@@ -1,4 +1,4 @@
-name: SSH Access with tmate
+name: SSH Access via tmate
 
 on:
   workflow_dispatch:
@@ -13,12 +13,14 @@ jobs:
           sudo apt update
           sudo apt install -y tmate
 
-      - name: ایجاد نشست SSH
+      - name: اجرای نشست tmate
         run: |
           tmate -S /tmp/tmate.sock new-session -d
           tmate -S /tmp/tmate.sock wait tmate-ready
-          tmate -S /tmp/tmate.sock display -p 'SSH دستور: %{tmate_ssh}'
-          tmate -S /tmp/tmate.sock display -p 'Web آدرس: %{tmate_web}'
+          echo "👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇"
+          tmate -S /tmp/tmate.sock display -p '# SSH:   %{tmate_ssh}'
+          tmate -S /tmp/tmate.sock display -p '# WEB:   %{tmate_web}'
+          echo "👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆"
 
-      - name: فعال ماندن runner برای 3 ساعت
+      - name: زنده نگه داشتن Runner
         run: sleep 10800
