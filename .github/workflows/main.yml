@@ -1,26 +1,14 @@
-name: SSH Access via tmate
+name: SSH via tmate
 
 on:
   workflow_dispatch:
 
 jobs:
-  ssh:
+  debug:
     runs-on: ubuntu-latest
-
     steps:
-      - name: نصب tmate
+      - name: نصب tmate و اجرای سشن
         run: |
           sudo apt update
           sudo apt install -y tmate
-
-      - name: اجرای نشست tmate
-        run: |
-          tmate -S /tmp/tmate.sock new-session -d
-          tmate -S /tmp/tmate.sock wait tmate-ready
-          echo "👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇"
-          tmate -S /tmp/tmate.sock display -p '# SSH:   %{tmate_ssh}'
-          tmate -S /tmp/tmate.sock display -p '# WEB:   %{tmate_web}'
-          echo "👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆"
-
-      - name: زنده نگه داشتن Runner
-        run: sleep 10800
+          tmate new-session -s main
