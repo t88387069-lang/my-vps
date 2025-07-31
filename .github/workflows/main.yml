@@ -1,14 +1,12 @@
-name: SSH via tmate
+name: SSH with tmate
 
 on:
   workflow_dispatch:
 
 jobs:
-  debug:
+  remote-debug:
     runs-on: ubuntu-latest
+
     steps:
-      - name: نصب tmate و اجرای سشن
-        run: |
-          sudo apt update
-          sudo apt install -y tmate
-          tmate new-session -s main
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
