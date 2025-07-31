@@ -1,16 +1,24 @@
-name: SSH via Cloudflare Tunnel
+name: SSH Access with tmate
 
 on:
   workflow_dispatch:
 
 jobs:
-  connect:
+  ssh:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
+      - name: نصب tmate
+        run: |
+          sudo apt update
+          sudo apt install -y tmate
 
-      - name: Expose SSH via Cloudflare
-        uses: valeriangalliat/action-sshd-cloudflared@v4
+      - name: ایجاد نشست SSH
+        run: |
+          tmate -S /tmp/tmate.sock new-session -d
+          tmate -S /tmp/tmate.sock wait tmate-ready
+          tmate -S /tmp/tmate.sock display -p 'SSH دستور: %{tmate_ssh}'
+          tmate -S /tmp/tmate.sock display -p 'Web آدرس: %{tmate_web}'
 
-      - name: خروجی دستور SSH
-        run: echo "Use the ssh command printed above to connect."
+      - name: فعال ماندن runner برای 3 ساعت
+        run: sleep 10800
